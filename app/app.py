@@ -1,10 +1,10 @@
 # gerald parser app
 from flask import Flask
-from parser import start
+from parser import start, Wikipars
 
 app = Flask(__name__)
 
-@app.route('/')
+@app.route('/45')
 def home():
     people = start()
     # data = list(map(p['name'] for p in people))
@@ -13,6 +13,11 @@ def home():
         data.append(p)
 
     return {'people': data}
+
+@app.route('/')
+def init():
+    pars = Wikipars()
+    pars.start()
 
 
 if __name__ == '__main__':

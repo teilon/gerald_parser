@@ -13,29 +13,103 @@ target_links = []
 people = []
 
 
-class Relation_with(NamedTuple):
-   relation: str
-   name: str
-   uri: str 
-#{
-# 'relation': cat,
-# 'name': _name,
-# 'uri': '{}{}'.format(host, _tag['href']) if _tag.has_attr('href') else ''
-#}
+class Wikipars():
+    links = []
 
-class Person_link(NamedTuple):
-    name: str
-    relations: List[Relation_with]
-#{
-# 'person': {
-#  'name': name,
-#  "parent_id": 0,
-#  "child_id": 0},
-# 'relations': relations
-#}
+    def start(self) -> list:
+        self.init_start()
+        true_links = list(filter(lambda x: not x['done'], self.links))
+        n = 0
+        while true_links:
+            sleep(2)
+            pprint('*** {} ***'.format(n))
+            n += 1
+
+            self.parse()
+            true_links = list(filter(lambda x: not x['done'], self.links))
+    
+    def add_link(self, link: Dict) -> None:
+        # for l in self.links:
+        if not list(filter(lambda x: x['uri'] == link['uri'], self.links)):
+            self.links.append(link)
+
+            with open("links.txt", "a") as f:
+                f.write('name: {}\nuri: {}\n***\n'.format(link['name'], link['uri']))
+
+    def init_start(self) -> None:
+        first_link = {
+            'uri': target_uri, 
+            'name': 'first',
+            'done': False
+        }
+        self.add_link(first_link)
+    
+    def parse(self) -> None:
+        target_link = next(filter(lambda x: not x['done'], self.links))
+        target_link['done'] = True
+
+        uri = target_link['uri']
+        pprint(uri)
+        if uri:
+            self.parse_data(uri)
+    
+    def get_target_html(self, uri: str) -> str:
+        r = requests.get(uri)
+        return r.text
+    
+    def parse_data(self, uri: str) -> None:
+        html = self.get_target_html(uri)
+        soup = BeautifulSoup(html, 'lxml')
+
+        name = soup.find('div', class_='mw-body', id='content').find('h1').text.strip()
+        infobox = soup.find('table', class_='infobox')
+
+        if not infobox:
+            return
+
+        cats = ["Отец", "Мать", ["Супруга", "Супруг"], "Дети"]
+        for cat in cats:
+            if not infobox.find("th", text=cat):
+                continue
+            _tags = infobox.find("th", text=cat).parent.find_all('a')
+            if not _tags:
+                _tags = infobox.find("th", text=cat).parent.find_all('span')
+            if not _tags:
+                continue
+
+            self.extract_data(_tags, cat)
+    
+    def extract_data(self, datatag: bs4.element.ResultSet, cat: str) -> None:
+        host = 'https://ru.wikipedia.org'
+        for _tag in datatag:
+            if _tag.has_attr('href') and not _tag.has_attr('title'):
+                continue
+            
+            name = _tag.text.strip()            
+            if self.check_name(name):
+                continue
+            uri = '{}{}'.format(host, _tag['href']) if _tag.has_attr('href') else ''
+
+            link = {
+                'uri': uri,
+                'name': name,
+                'done': False                
+            }
+            self.add_link(link)
+    
+    def check_name(self, name:str) -> bool:
+        pattern_square = '^\[.*'
+        pattern_digit = '[\d]+'
+        return re.match(pattern_square, name) or re.match(pattern_digit, name)
+
+    
+
+    
 
 
-def start():
+
+
+def start() -> List:
     init_target_links()
     n = 0
 
@@ -66,7 +140,6 @@ def update_people(person) -> Dict:
     people.append(person)
 
 def update_target_links(links) -> None: # : list
-    pprint('is {}'.format(type(links)))
     _links = []
     for link in links:
         if filter(lambda x: x != link, _links):
@@ -90,7 +163,7 @@ def exists_target_links() -> bool:
     return False
 
 def get_next_link() -> Dict:
-    link = next(filter(lambda x: x['done'] == False, target_links))    
+    link = next(filter(lambda x: x['done'] == False, target_links))
     if link:
         link['done'] = True
         pprint(link['link']['uri'])
