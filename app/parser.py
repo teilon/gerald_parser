@@ -4,8 +4,7 @@ from bs4 import BeautifulSoup
 import requests
 import re
 from time import sleep
-
-from pprint import pprint
+from random import uniform
 
 target_uri = 'https://ru.wikipedia.org/wiki/%D0%9C%D0%B8%D0%BB%D0%BE%D1%81%D0%BB%D0%B0%D0%B2%D1%81%D0%BA%D0%B0%D1%8F,_%D0%9C%D0%B0%D1%80%D0%B8%D1%8F_%D0%98%D0%BB%D1%8C%D0%B8%D0%BD%D0%B8%D1%87%D0%BD%D0%B0'
 
@@ -15,22 +14,19 @@ class Wikipars():
     def start(self) -> list:
         self.init_start()
         true_links = list(filter(lambda x: not x['done'], self.links))
-        n = 0
         while true_links:
-            sleep(2)
-            pprint('*** {} ***'.format(n))
-            n += 1
+            sec = uniform(2, 10)
+            sleep(sec)
 
             self.parse()
             true_links = list(filter(lambda x: not x['done'], self.links))
     
     def add_link(self, link: Dict) -> None:
-        # for l in self.links:
         if not list(filter(lambda x: x['uri'] == link['uri'], self.links)):
             self.links.append(link)
 
-            with open("links.txt", "a") as f:
-                f.write('name: {}\nuri: {}\n***\n'.format(link['name'], link['uri']))
+            # with open("links.txt", "a") as f:
+            #     f.write('name: {}\nuri: {}\n***\n'.format(link['name'], link['uri']))
 
     def init_start(self) -> None:
         first_link = {
@@ -45,7 +41,6 @@ class Wikipars():
         target_link['done'] = True
 
         uri = target_link['uri']
-        pprint(uri)
         if uri:
             self.parse_data(uri)
     
