@@ -1,13 +1,30 @@
 from typing import NamedTuple, List, Dict
 import json
 
-class Person(NamedTuple):
+class Person(object):
+    __slots__ = 'id', 'name', 'category', 'uri', 'relation_id', 'sex', 'born', 'deid', 'send', 'done'
     id: int
     name: str
     category: str
     uri: str
     relation_id: int
-    # done: bool
+    sex: str
+    born: str
+    deid: str
+    done: bool
+    send: bool
+    
+    def __init__(self, id: int, name: str, uri: str, relation_id: int = -1, category: str = 'unknown', sex: str = 'unknown', born: str = 'unknown', deid: str = 'unknown'):
+        self.id = id
+        self.name = name
+        self.category = category
+        self.uri = uri
+        self.relation_id = relation_id
+        self.sex = sex
+        self.born = born
+        self.deid = deid
+        self.done = False
+        self.send = False
 
 
 class People:
@@ -50,5 +67,8 @@ class People:
                 'name':x['person'].name, 
                 'category':x['person'].category, 
                 'uri':x['person'].uri, 
-                'relation_id':x['person'].relation_id
+                'relation_id':x['person'].relation_id,
+                'sex':x['person'].sex,
+                'born':x['person'].born,
+                'deid':x['person'].deid
                 } for x in self._all]
