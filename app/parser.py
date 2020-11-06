@@ -25,15 +25,20 @@ class Wikipars():
             self.pause()
             self.parse()
 
-            print('{} iteration'.format(_n))
-            _n = _n + 1
-            if _n == 2:
+            if self.people.ready_tosend():
+                json_data = self.people.json_tosend()
+                self.send(json_data)
+
+            _n = _n + 1            
+            if _n == 50:
                 break
-        self.send()
-    
-    def send(self):
-        with open('tmp.txt', 'w') as f:
-            json.dump(self.people.json(), f, indent=4)
+
+            print('{} iteration'.format(_n))
+        print('Done!')
+
+    def send(self, json_data):
+        with open('tmp.txt', 'a') as f:
+            json.dump(json_data, f, indent=4)
 
     def pause(self) -> None:
         sec = uniform(2, 10)
@@ -43,6 +48,7 @@ class Wikipars():
         person = self.people.next()
         if not person.uri:
             return
+        print('uri: {}'.format(person.uri))
         html = self.get_target_html(person.uri)
         soup = BeautifulSoup(html, 'lxml')
 
@@ -118,12 +124,16 @@ class Wikipars():
                 _years.append(match.group(0))
         
         if not _years:
-            return None
+            return {
+                'date_of_born': 'unknown',
+                'date_of_deid': 'unknown'
+                }
 
         return {
             'date_of_born': min(_years),
             'date_of_deid': max(_years)
             }
+       
 
     def get_target_html(self, uri: str) -> str:
         r = requests.get(uri)
