@@ -6,3 +6,4 @@
 **/.vscode
 **/*.txt
 !**/requirements.txt
+**/docker-compose.yml
